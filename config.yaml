@@ -1,0 +1,84 @@
+# anythings 协议数据模拟器本地配置
+# 每个插件对应网关的一种采集协议；模拟器扮演设备侧：
+#   modbus-tcp → Modbus 从站（网关做主站轮询）
+#   mqtt       → 发布者（网关订阅）
+#   tcp / udp  → 请求-应答服务（网关发起请求）
+#   opc-ua     → OPC UA 服务器（网关做客户端）
+#   prometheus → metrics exporter（网关做抓取客户端）
+#
+# 网关端点配置对应关系（gateway 侧 endpoint.protocol_identifier）：
+#   modbus-tcp: {"slave": 1, "fc": 3, "addr": 0, "type": "uint16"}   addr 为零基寄存器地址
+#   mqtt:       {"topic": "iot/sim/data", "path": "$.temperature"}
+#   tcp/udp:    {"request": "read", "response_format": "json", "path": "$.temperature"}
+#               connection 需与模拟器一致：{"host": "127.0.0.1", "port": 9000, "framing": "line"}
+#   opc-ua:     {"node_id": "ns=2;i=2"}   实际 NodeId 以启动日志打印为准
+#               connection.endpoint_url = "opc.tcp://127.0.0.1:4840"
+#   prometheus: {"metric": "line_temperature", "labels": {"line": "A"}, "aggregate": "avg"}
+#               connection.url = "http://127.0.0.1:9100/metrics"
+plugins:
+  modbus-tcp:
+    enabled: true
+    host: 127.0.0.1
+    port: 1502          # 避开需要特权的 502
+    slave: 1
+    interval_ms: 1000
+    device_id: SIM-MODBUS-01
+    registers:
+      - { name: temperature, addr: 0, scale: 10 }
+      - { name: humidity, addr: 1, scale: 10 }
+    values:
+      - { name: temperature, min: 18, max: 32, decimals: 1 }
+      - { name: humidity, min: 35, max: 70, decimals: 1 }
+
+  mqtt:
+    enabled: false      # 需要本地 Broker（如部署中的 mosquitto）时打开
+    host: 127.0.0.1
+    port: 1883
+    topic: iot/sim/data
+    interval_ms: 2000
+    device_id: SIM-MQTT-01
+    values:
+      - { name: temperature, min: 18, max: 32, decimals: 2 }
+      - { name: humidity, min: 35, max: 70, decimals: 2 }
+
+  tcp:
+    enabled: true
+    host: 127.0.0.1
+    port: 9000
+    framing: line       # 与网关 connection.framing 对齐
+    delimiter: "\\n"
+    interval_ms: 1000
+    device_id: SIM-TCP-01
+
+  udp:
+    enabled: true
+    host: 127.0.0.1
+    port: 9001
+    framing: line
+    delimiter: "\\n"
+    interval_ms: 1000
+    device_id: SIM-UDP-01
+
+  opc-ua:
+    enabled: false      # 需要 pip install asyncua 后打开
+    host: 0.0.0.0
+    port: 4840
+    namespace: urn:anythings:simulator
+    interval_ms: 1000
+    device_id: SIM-OPCUA-01
+    values:
+      - { name: temperature, min: 18, max: 32, decimals: 1 }
+      - { name: humidity, min: 35, max: 70, decimals: 1 }
+
+  prometheus:
+    enabled: true
+    host: 127.0.0.1
+    port: 9100          # 与网关 connection.url 对应
+    path: /metrics
+    interval_ms: 1000
+    device_id: SIM-PROM-01
+    labels: { line: A, station: SIM }
+    values:
+      - { name: line_temperature, min: 18, max: 32, decimals: 1, type: gauge }
+      - { name: line_pressure, min: 0.8, max: 1.6, decimals: 3, type: gauge }
+      - { name: line_output, min: 100, max: 300, decimals: 0, type: counter }

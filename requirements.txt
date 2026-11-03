@@ -1,0 +1,9 @@
+pyyaml>=6.0
+paho-mqtt>=1.6
+# ed25519 配置签名密钥与离线许可
+cryptography>=41.0
+# 3.7+ 重构了 datastore/async 接口，模拟器按 3.6.x 经典 API 编写
+pymodbus>=3.0,<3.7
+pytest>=8.0
+# opc-ua
+asyncua>=1.0

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Docker local volumes
+_data/
+volumes/
